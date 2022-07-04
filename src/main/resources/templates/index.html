@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Trafigura Equity Position</title>
+    <style>
+         #tab th,td{
+            padding: 5px;
+        }
+    </style>
+    <script type="text/javascript" th:src="@{/js/jquery-3.4.0.min.js}"></script>
+    <script src="https://webapi.amap.com/maps?v=1.4.15&key=e0aa6b848d344f2a7317c9e624604f4d"></script>
+</head>
+<body bgcolor="#ffffff">
+<div style="margin-top: 30px">
+    <span>Transaction Table</span>
+    <table id = "tab" border="1px" cellspacing="0.5" style="font-family:verdana;font-size:80%;color:darkgreen;margin-top: 10px;margin-bottom: 10px;">
+        <tr>
+            <th>TransactionID</th>
+            <th>TradeID</th>
+            <th>Version</th>
+            <th>SecurityCode</th>
+            <th>Quantity</th>
+            <th>Insert/Update/Cancel</th>
+            <th>Buy/Sell</th>
+
+        </tr>
+
+    </table>
+    <span>Input:</span>
+    <table width="56.5%" border="1px" cellspacing="0.5" style="font-family:verdana;font-size:80%;color:darkgreen;margin-top: 10px;margin-bottom: 10px;">
+        <tr>
+            <th>TradeID</th>
+            <th>Version</th>
+            <th>SecurityCode</th>
+            <th>Quantity</th>
+            <th>Insert/Update/Cancel</th>
+            <th>Buy/Sell</th>
+        </tr>
+        <tr>
+        <td width="14.28%"><input id="tradeId" type="text" style="width: 120px;"></td>
+        <td width="14.28%"><input id="version" type="text" style="width: 120px;"></td>
+        <td width="14.28%">
+            <select id="securityCode">
+                <option value ="REL">REL</option>
+                <option value="ITC">ITC</option>
+                <option value="INF">INF</option>
+            </select>
+        </td>
+        <td width="14.28%"><input id="quantity" type="text" style="width: 120px;"></td>
+        <td width="14.28%">
+            <select id="action" style="width: 120px;">
+                <option value ="INSERT">INSERT</option>
+                <option value ="UPDATE">UPDATE</option>
+                <option value="CANCEL">CANCEL</option>
+            </select>
+        </td>
+        <td width="14.28%">
+            <select id="type">
+            <option value ="BUY">BUY</option>
+            <option value="SELL">SELL</option>
+        </select>
+        </td>
+            <td><button id ="bt7">Input</button></td>
+    </tr>
+    </table>
+
+    <span>Output:</span>
+    <table id="tb2" border="1px" cellspacing="0.5" style="font-family:verdana;font-size:80%;color:darkgreen;margin-top: 10px;margin-bottom: 10px;">
+        <tr ><td width="60px">REL</td><td width="100px" align="center" id="qt1">0</td></tr>
+        <tr><td width="60px">ITC</td><td align="center" id="qt2">0</td></tr>
+        <tr><td width="60px">INF</td><td align="center" id="qt3">0</td></tr>
+    </table>
+    <span><a href="/console/login.do?jsessionid=01700dc707977abe45a77b481075bd00">h2 web console</a></span>
+</div>
+</body>
+<script>
+
+    $(function(){
+
+        $('#bt7').click(function(){
+            if($.trim($("#tradeId").val()) == "" || $.trim($("#version").val()) == ""||$.trim($("#quantity").val()) == ""||$.trim($("#action").val()) == ""||$.trim($("#securityCode").val()) == ""||$.trim($("#type").val()) == ""){
+                alert("input data can not be null");
+                return;
+            }
+            $.ajax({
+                type: "POST",
+                url: "/equity/transaction/input",
+                data: {tradeId:$("#tradeId").val(), version:$("#version").val(),securityCode:$("#securityCode").val(),quantity:$("#quantity").val(),action:$("#action").val(),type:$("#type").val()},
+                dataType: "json",
+                success: function(data){
+                    if(data.errorCode == 200){
+                        addRow(data);
+                        setResult(data);
+                    }
+                    else if(data.status == 400){
+                        alert("request parameter is invalid");
+                    } else {
+                        alert(data.errorMessage);
+                        return;
+                    }
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    alert(xhr.responseText);
+                }
+            });
+        });
+    });
+
+    function addRow(data) {
+        var trHTML = '<tr><td>'+
+            data.reqData.transactionID +'</td><td>'+
+            data.reqData.tradeId +'</td><td>'+
+            data.reqData.version +'</td><td>'+
+            data.reqData.securityCode +'</td><td>'+
+            data.reqData.quantity +'</td><td>'+
+            data.reqData.action +'</td><td>'+
+            data.reqData.type +'</td><</tr>';
+        $("#tab").append(trHTML);
+    }
+
+    function setResult(data){
+        if(data.securityCode == 'REL'){
+            $("#qt1").html(data.quantity);
+            return;
+        }
+        if(data.securityCode == 'ITC'){
+            $("#qt2").html(data.quantity);
+            return;
+        }
+        if(data.securityCode == 'INF'){
+            $("#qt3").html(data.quantity);
+            return;
+        }
+    }
+</script>
+</html>
